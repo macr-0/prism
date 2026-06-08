@@ -12,7 +12,7 @@ While the user experience feels like a direct peer-to-peer (P2P) connection, all
 - **Zero Data Footprint:** Messages are processed entirely in-memory. No databases, no account configuration, and zero message retention. Once a room closes, the data vanishes.
 - **Automatic Disconnect Handling:** If one user leaves, the server notifies the remaining peer and automatically bounces them back to the main menu after a 5-second graceful timeout.
 
-## ⚙️ Setup & Installation
+##  Setup & Installation
 
 ### 1. Prerequisites
 - **Python:** You must have the **latest version of Python 3** installed on your system. No additional third-party dependencies or `pip` installs are needed.
@@ -37,17 +37,16 @@ python server.py
  ### How to Chat
  - Once client.py is open, choose your routing mode:
     **Option A: Hosting a Room**
-   1. Select Host from the menu.
-   2. Enter the central server's IP and Port.
-   3. Enter your temporary Display Name (required every time you open the program).
-   4. The server will register a new session and generate a unique room code. Give this code to your friend!
-   5. Wait for the server to pair your friend to your room thread, then begin chatting.
+   - Select Host from the menu.
+   - Enter the central server's IP and Port.
+   - Enter your temporary Display Name (required every time you open the program).
+   - The server will register a new session and generate a unique room code. Give this code to your friend!
+   - Wait for the server to pair your friend to your room thread, then begin chatting.
 
    **Option B: Joining an Existing Room**
-   1. Select Join from the menu.
-   2. Enter the unique room code provided by the Host.
-   3. Enter your temporary Display Name (required every time you open the program).
-   4. The server will authenticate the code, bridge your connection to the host, and drop you into the chat room.
+   - Select Join from the menu.
+   - Enter the unique room code provided by the Host.
+   - Enter your temporary Display Name (required every time you open the program).
+   - The server will authenticate the code, bridge your connection to the host, and drop you into the chat room.
 
-  ### Prerequisites
-  - Python 3.x
+  
