@@ -31,6 +31,7 @@ python server.py
 **Step 2: Enter the Port number you want the server to listen on.**
 ### 4. Launch the Client App (client.py)
 - Open a separate terminal window (and have your friend open one on their machine) and run:
+  
   ```bash
   python client.py
   ```
