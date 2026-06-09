@@ -1,53 +1,48 @@
-#  Prism
+# Prism
 
-Prism is a lightweight, zero-dependency, strict ASCII terminal chat application built in Python using raw sockets and multi-threading. It utilizes a **Client-Server architecture** to orchestrate multiple concurrent, completely isolated 2-person private conversations over a single central server IP address.
+Prism is a lightweight, zero-dependency, pure ASCII peer-to-peer terminal chat application built in Python using raw sockets and threading. No central server needed — peers connect directly over TCP using Tailscale for NAT traversal.
 
-While the user experience feels like a direct peer-to-peer (P2P) connection, all traffic is securely managed and routed through a central server using dynamically generated unique room codes. No databases, no logs, and no message history are retained—ensuring clean, ephemeral communication straight from your command line.
+## Features
 
-##  Features
+- **Strict ASCII UI**: Pure text-based interface. Runs in any terminal or command prompt.
+- **Peer-to-Peer**: Direct TCP socket between two peers. No central server, no room codes.
+- **Tailscale Ready**: Auto-detects your Tailscale IP for easy sharing.
+- **E2EE-Ready Protocol**: Message format (`MSG|text`) is designed to swap in encryption later without structural changes.
+- **Zero Data Footprint**: Messages processed entirely in-memory. No logs, no databases, no history.
+- **Immediate Disconnect**: Leave instantly with `/leave`, `/quit`, or `/q`.
 
-- **Strict ASCII UI:** Pure text-based interface. Runs perfectly in any native terminal or command prompt.
-- **Client-Server Architecture:** Centralized server handles multiple pairs simultaneously on a single host IP. Rooms are capped at a hard maximum of 2 participants.
-- **Dynamic Code Generation:** The server allocates unique access codes to hosts, allowing clients to bridge together into isolated threads.
-- **Zero Data Footprint:** Messages are processed entirely in-memory. No databases, no account configuration, and zero message retention. Once a room closes, the data vanishes.
-- **Automatic Disconnect Handling:** If one user leaves, the server notifies the remaining peer and automatically bounces them back to the main menu after a 5-second graceful timeout.
+## Setup
 
-##  Setup & Installation
+### Prerequisites
 
-### 1. Prerequisites
-- **Python:** You must have the **latest version of Python 3** installed on your system. No additional third-party dependencies or `pip` installs are needed.
+- **Python 3.6+** (no pip installs needed)
+- **Tailscale** (recommended) — both peers on the same tailnet
 
-### 2. Download the App
-- Download the project code as a `.zip` file from this GitHub repository.
-- Extract the zip file to your preferred folder. You will use the two core files: `server.py` and `client.py`.
+### Usage
 
-### 3. Start the Central Server (`server.py`)
-Open a terminal window on your host machine or VPS and run the server script first:
 ```bash
-python server.py
+python peer.py
 ```
-**Step 1: Enter the target IP address to bind the server socket.**
 
-**Step 2: Enter the Port number you want the server to listen on.**
-### 4. Launch the Client App (client.py)
-- Open a separate terminal window (and have your friend open one on their machine) and run:
-  
-  ```bash
-  python client.py
-  ```
- ### How to Chat
- - Once client.py is open, choose your routing mode:
-    **Option A: Hosting a Room**
-   - Select Host from the menu.
-   - Enter the central server's IP and Port.
-   - Enter your temporary Display Name (required every time you open the program).
-   - The server will register a new session and generate a unique room code. Give this code to your friend!
-   - Wait for the server to pair your friend to your room thread, then begin chatting.
+1. **Host**: Select `[1]`, enter your display name, pick a port (default 5555). Share your Tailscale IP and port with your peer.
+2. **Join**: Select `[2]`, enter the host's Tailscale IP and port, then your display name.
+3. **Chat**: Type messages freely. Commands: `/help`, `/leave`, `/quit`, `/q`.
 
-   **Option B: Joining an Existing Room**
-   - Select Join from the menu.
-   - Enter the unique room code provided by the Host.
-   - Enter your temporary Display Name (required every time you open the program).
-   - The server will authenticate the code, bridge your connection to the host, and drop you into the chat room.
+## Protocol
 
-  
+Plain TCP, messages terminated by newline:
+
+| Direction | Format | Description |
+|-----------|--------|-------------|
+| Both | `NAME|display_name\n` | Handshake (sent immediately after connect/accept) |
+| Both | `MSG|text\n` | Chat message |
+| Either | `LEAVE\n` | Disconnect notification |
+
+The peer receiving `LEAVE` or detecting socket closure exits to the menu.
+
+## Architecture
+
+- Single file (`peer.py`) handles both host and join roles
+- Host opens a listener; joiner connects directly to host's IP:port
+- No central relay, no room codes, no server process needed
+- Future E2EE: replace `MSG|text` with `MSG|<base64(encrypted)>` — protocol unchanged

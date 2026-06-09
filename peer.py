@@ -15,7 +15,7 @@ def recv_line(sock):
         if not c:
             return None
         if c == b"\n":
-            return buf.decode().strip()
+            return buf.decode("utf-8", errors="replace").strip()
         buf += c
 
 
@@ -165,13 +165,21 @@ def run_chat(sock, display_name, peer_name):
         else:
             time.sleep(0.05)
 
+    try:
+        sock.shutdown(socket.SHUT_RDWR)
+    except Exception:
+        pass
     recv_thread.join(timeout=2)
 
 
 def host_room(display_name):
     print("\n  Enter port (Enter for 5555):")
     port_str = input("  > ").strip()
-    port = int(port_str) if port_str else DEFAULT_PORT
+    try:
+        port = int(port_str) if port_str else DEFAULT_PORT
+    except ValueError:
+        print(f"  Invalid port: {port_str}")
+        return
 
     tailscale_ip = get_tailscale_ip()
 
@@ -181,6 +189,7 @@ def host_room(display_name):
         server.bind(("0.0.0.0", port))
     except OSError as e:
         print(f"  Bind failed: {e}")
+        server.close()
         return
     server.listen(1)
 
@@ -205,6 +214,7 @@ def host_room(display_name):
         server.close()
         return
 
+    conn.settimeout(10)
     try:
         peer_line = recv_line(conn)
         if peer_line and peer_line.startswith("NAME|"):
@@ -216,6 +226,7 @@ def host_room(display_name):
         conn.close()
         print("  Handshake failed.")
         return
+    conn.settimeout(None)
 
     run_chat(conn, display_name, peer_name)
     conn.close()
@@ -254,6 +265,7 @@ def join_room():
         sock.close()
         return
 
+    sock.settimeout(10)
     try:
         sock.sendall(f"NAME|{name}\n".encode())
         peer_line = recv_line(sock)
@@ -265,6 +277,7 @@ def join_room():
         sock.close()
         print("  Handshake failed.")
         return
+    sock.settimeout(None)
 
     run_chat(sock, name, peer_name)
     sock.close()
@@ -276,7 +289,11 @@ def main():
 
     while True:
         display_menu()
-        choice = input("  Select: ").strip()
+        try:
+            choice = input("  Select: ").strip()
+        except (KeyboardInterrupt, EOFError):
+            print("\n  Goodbye!")
+            return
 
         if choice == "1":
             print("\n  Enter your display name:")
@@ -284,9 +301,13 @@ def main():
             if not name:
                 name = "Anonymous"
             host_room(name)
+            clear_screen()
+            display_banner()
 
         elif choice == "2":
             join_room()
+            clear_screen()
+            display_banner()
 
         elif choice == "3":
             print("  Goodbye!")
