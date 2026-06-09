@@ -39,6 +39,18 @@ def get_tailscale_ip():
     return None
 
 
+def get_lan_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.settimeout(1)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return None
+
+
 def receive_messages(sock, chat_active, peer_name):
     while chat_active[0]:
         try:
@@ -182,6 +194,7 @@ def host_room(display_name):
         return
 
     tailscale_ip = get_tailscale_ip()
+    lan_ip = get_lan_ip()
 
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -197,10 +210,17 @@ def host_room(display_name):
     print()
     print("  " + "=" * 50)
     print("     Waiting for peer to connect...")
+    print()
+    if lan_ip:
+        print(f"     LAN (same WiFi): {lan_ip}:{port}")
     if tailscale_ip:
-        print(f"     Tailscale IP: {tailscale_ip}")
-    else:
-        print("     IP: (check your Tailscale IP)")
+        print(f"     Tailscale (same account): {tailscale_ip}:{port}")
+    print(f"     Tailscale Share (different account):")
+    print("       1. Go to https://login.tailscale.com/admin/machines")
+    print("       2. Click Share on this machine")
+    print("       3. Enter friend's email")
+    print("       4. Friend accepts, then joins with IP above")
+    print()
     print(f"     Port: {port}")
     print("  " + "-" * 50)
     print()
@@ -233,7 +253,7 @@ def host_room(display_name):
 
 
 def join_room():
-    print("\n  Enter host's Tailscale IP:")
+    print("\n  Enter host's IP (Tailscale/LAN):")
     ip = input("  > ").strip()
     if not ip:
         print("  No IP provided.")
